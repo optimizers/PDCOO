@@ -1,4 +1,4 @@
-classdef LSMR < pdcoO
+classdef LSMR < handle
     
     properties
         atolmin
@@ -15,30 +15,28 @@ classdef LSMR < pdcoO
     end
     
     methods
-        function o = LSMR(slack, options)
+        function o = LSMR(options)
             
-            o = o@pdcoO(slack, options);
-            
-            if isfield(options, 'LSMRatol1')
-                o.atol1 = options.LSMRatol1;
+            if isfield(options, 'atol1')
+                o.atol1 = options.atol1;
             else
                 o.atol1 = 1e-10;
             end
             
-            if isfield(options, 'LSMRatol2')
-                o.atol2 = options.LSMRatol2;
+            if isfield(options, 'atol2')
+                o.atol2 = options.atol2;
             else
                 o.atol2 = 1e-15;
             end
             
-            if isfield(options, 'LSMRconlim')
-                o.conlim = options.LSMRconlim;
+            if isfield(options, 'conlim')
+                o.conlim = options.conlim;
             else
                 o.conlim = 1e+12;
             end
             
-            if isfield(options, 'LSMRMaxIter')
-                o.itnlim = options.LSMRMaxIter * min(o.m, o.n);
+            if isfield(options, 'itnlim')
+                o.itnlim = options.itnlim * min(o.m, o.n);
             else
                 o.itnlim = 10 * min(o.m, o.n);
             end

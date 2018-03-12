@@ -6,7 +6,7 @@ classdef Cholesky < handle
     end
 
     methods
-        function o = Cholesky(slack, options)
+        function o = Cholesky(options)
             o.manage_op = false;
             o.need_precon = false;
             o.solver = '  Chol';  o.head3 = '     Chol';

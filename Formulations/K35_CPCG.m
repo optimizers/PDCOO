@@ -1,4 +1,4 @@
-classdef K35_CPCG < pdcoO
+classdef K35_CPCG < handle
 
     properties
         C
@@ -13,8 +13,7 @@ classdef K35_CPCG < pdcoO
     end
 
     methods
-        function o = K35_CPCG(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = K35_CPCG(options)
             o.diagHess = false;
         end
 

@@ -1,4 +1,4 @@
-classdef K1y_ls < pdcoO
+classdef K1y_ls < handle
     
     properties
         M
@@ -12,8 +12,7 @@ classdef K1y_ls < pdcoO
     end
     
     methods
-        function o = K1y_ls(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = K1y_ls(options)
             o.diagHess = true;
         end
         

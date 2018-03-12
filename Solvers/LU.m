@@ -1,4 +1,4 @@
-classdef LU < pdcoO
+classdef LU < handle
     
     properties
         L
@@ -6,8 +6,7 @@ classdef LU < pdcoO
     end
     
     methods
-        function o = LU(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = LU(options)
             o.manage_op = false;
             o.need_precon = false;
             o.solver  = '    LU';

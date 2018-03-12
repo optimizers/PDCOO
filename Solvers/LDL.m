@@ -1,12 +1,11 @@
-classdef LDL < pdcoO
+classdef LDL < handle
 
     properties
         L
     end
 
     methods
-        function o = LDL(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = LDL(options)
             o.manage_op = false;
             o.need_precon = false;
             o.solver  = '    LDL';

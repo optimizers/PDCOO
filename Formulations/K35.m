@@ -1,4 +1,4 @@
-classdef K35 < pdcoO
+classdef K35 < handle
 
     properties
         M
@@ -12,8 +12,7 @@ classdef K35 < pdcoO
     end
 
     methods
-        function o = K35(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = K35(options)
             o.diagHess = false;
         end
 

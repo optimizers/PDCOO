@@ -1,4 +1,4 @@
-classdef K2_ls < pdcoO
+classdef K2_ls < handle
     
     properties
         M
@@ -12,8 +12,7 @@ classdef K2_ls < pdcoO
     end
     
     methods
-        function o = K2_ls(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = K2_ls(options)
             o.diagHess = true;
         end
         

@@ -1,4 +1,4 @@
-classdef CPCG < pdcoO
+classdef CPCG < handle
     
     properties
         itnlim
@@ -11,23 +11,22 @@ classdef CPCG < pdcoO
     end
     
     methods
-        function o = CPCG(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = CPCG(options)
             
-            if isfield(options, 'LSMRatol1')
-                o.atol1 = options.LSMRatol1;
+            if isfield(options, 'atol1')
+                o.atol1 = options.atol1;
             else
                 o.atol1 = 1e-10;
             end
             
-            if isfield(options, 'LSMRatol2')
-                o.atol2 = options.LSMRatol2;
+            if isfield(options, 'atol2')
+                o.atol2 = options.atol2;
             else
                 o.atol2 = 1e-15;
             end
             
-            if isfield(options, 'LSMRMaxIter')
-                o.itnlim = options.LSMRMaxIter * min(o.m, o.n);
+            if isfield(options, 'itnlim')
+                o.itnlim = options.itnlim * min(o.m, o.n);
             else
                 o.itnlim = 10;
             end

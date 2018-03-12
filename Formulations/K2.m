@@ -1,4 +1,4 @@
-classdef K2 < pdcoO
+classdef K2 < handle
 
     properties
         M
@@ -12,8 +12,7 @@ classdef K2 < pdcoO
     end
 
     methods
-        function o = K2(slack, options)
-            o = o@pdcoO(slack, options);
+        function o = K2(options)
             o.diagHess = false;
         end
 

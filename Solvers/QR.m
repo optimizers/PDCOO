@@ -1,4 +1,4 @@
-classdef QR < pdcoO
+classdef QR < handle
     
     properties
         R
@@ -6,9 +6,8 @@ classdef QR < pdcoO
     end
     
     methods
-        function o = QR(slack, options)
+        function o = QR(options)
             
-            o = o@pdcoO(slack, options);
             o.manage_op = false;
             o.need_precon = false;
             o.solver  = '    QR';

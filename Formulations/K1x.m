@@ -12,7 +12,7 @@ classdef K1x < handle
     end
 
     methods
-        function o = K1x(slack, options)
+        function o = K1x(options)
             o.diagHess = true;
         end
 
