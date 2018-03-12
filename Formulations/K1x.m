@@ -6,23 +6,23 @@ classdef K1x < handle
         sol
         norm_A
     end
-    
+
     methods (Abstract)
         Solver(o)
     end
-    
+
     methods
         function o = K1x(slack, options)
             o.diagHess = true;
         end
-        
+
         function y = opK1y(x, ~)
             t = o.A * x;
             t = t ./ (o.d2.^2);
             t = o.A' * t;
             y = t + o.H * x;
         end
-        
+
         function Solve_Newton(o)
             %-----------------------------------------------------------------
             %  Solve (*) for dx.
@@ -50,21 +50,21 @@ classdef K1x < handle
             if o.PDitns == 1
                 o.norm_A = normest(o.A, 1.0e-2);
             end
-            
+
             if o.need_precon
                 o.precon = 1 ./ (o.norm_A^2 / o.d2^2 + 1./o.H);
                 o.precon = diag(sparse(o.precon));
             end
-            
+
             if o.explicitA
                 o.M = o.A' * sparse(1:o.m, 1:o.m, 1 ./ (o.d2.^2), o.m, o.m) * o.A;
                 o.M = o.M + sparse(1:o.n, 1:o.n, o.H, o.n, o.n);
             else
                 o.M = opFunction(o.m, o.m, @opK1y);
             end
-            
+
             o.rhs = o.A' * (o.r1 ./ (o.d2.^2)) - w;
-            
+
             Solver(o);
 
             o.dx = o.sol;
