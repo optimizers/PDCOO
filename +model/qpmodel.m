@@ -47,8 +47,8 @@ classdef qpmodel < model.nlpmodel
         function Hc = hcon_local(self, ~, ~)
             Hc = sparse(self.n, self.n);
         end
-        
-        function H = hlag_local(self, ~, ~)
+
+        function H = hlag_local(self, varargin)
             H = sparse(self.n, self.n);
         end
         
