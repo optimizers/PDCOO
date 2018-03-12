@@ -1,5 +1,5 @@
-classdef Cholesky < pdcoO
-    
+classdef Cholesky < handle
+
     properties
         R
         P
@@ -7,7 +7,6 @@ classdef Cholesky < pdcoO
     
     methods
         function o = Cholesky(slack, options)
-            o = o@pdcoO(slack, options);
             o.manage_op = false;
             o.need_precon = false;
             o.solver = '  Chol';  o.head3 = '     Chol';

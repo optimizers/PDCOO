@@ -1,5 +1,5 @@
-classdef K1x < pdcoO
-    
+classdef K1x < handle
+
     properties
         M
         rhs
@@ -13,7 +13,6 @@ classdef K1x < pdcoO
     
     methods
         function o = K1x(slack, options)
-            o = o@pdcoO(slack, options);
             o.diagHess = true;
         end
         
