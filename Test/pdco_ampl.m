@@ -40,16 +40,16 @@ mm_large_qps = {'boyd1', 'boyd2', 'cont-300'};
 qp_set = {'q25fv47'};
 
 % PDCO options.
-options = pdcoSet;
-options.Print = true;
-%options.Print = false;
-options.LSMRatol1 = 1.0e-6;  % Used as relative stopping tolerance by MINRES.
-options.LSMRatol2 = 1.0e-9; % Acts as atol_max.
-options.LSMRMaxIter = 2;     % Proportion of the number of variables.
+options_pdco = pdcoSet;
+options_pdco.Print = true;
+%options_pdco.Print = false;
+options_solv.atol1 = 1.0e-6;  % Used as relative stopping tolerance by MINRES.
+options_solv.atol2 = 1.0e-9; % Acts as atol_max.
+options_solv.itnlim = 2;     % Proportion of the number of variables.
 
 % Other options.
-options.d1 = 1.0e-2;
-options.d2 = 1.0e-2;
+options_pdco.d1 = 1.0e-2;
+options_pdco.d2 = 1.0e-2;
 
 stats = zeros(length(qp_set), 3);  % We keep PDitns, CGitns, time.
 
@@ -88,10 +88,14 @@ for k = 1 : length(qp_set)
   z0 = zsize * ones(qp.n, 1);
   y0 = zeros(size(cL));
 
-  options.mu0 = zsize;
-  options.Maxiter = min(max(30, qp.n), 100);
+  options_pdco.mu0 = zsize;
+  options_pdco.Maxiter = min(max(30, qp.n), 100);
+  
+  build_variant('K2,LDL');
+  
+  options_form = struct();
 
-  solver = pdco_K2_LDL(qp, options);
+  solver = pdco_K2_LDL(qp, options_pdco,options_form,options_solv);
   solver.solve()
 
   PDitns = solver.PDitns;
