@@ -5,7 +5,7 @@ options_pdco.file_id = 1;
 
 formulation = 'K1x';
 solver = 'Cholesky';
-classname = build_variant(formulation, solver);
+classname = build_variant(pdcoo_home, formulation, solver);
 
 list_problem = {'afiro.mps'};
 
