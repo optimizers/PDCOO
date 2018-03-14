@@ -1,5 +1,3 @@
-clear all
-
 import model.lpmodel;
 import model.slackmodel;
 
