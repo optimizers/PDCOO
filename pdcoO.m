@@ -177,6 +177,7 @@ classdef pdcoO < handle
         eigmax_pos
         pos_ubnds
         conds
+        conds_pred
 
     end
 
@@ -361,6 +362,7 @@ classdef pdcoO < handle
             o.eigmax_pos = [];
             o.pos_ubnds = [];
             o.conds = [];
+            o.conds_pred = [];
 
         end
 
@@ -521,6 +523,7 @@ classdef pdcoO < handle
             o.eigmax_pos = [];
             o.pos_ubnds = [];
             o.conds = [];
+            o.conds_pred = [];
 
             if o.Prilev > 0
                fprintf(o.file_id, '\n   --------------------------------------------------------');
@@ -750,14 +753,15 @@ classdef pdcoO < handle
 
                 % record eigenvalues of o.H before Solve_Newton modifies it.
                 eigsH = eig(full(o.H));
-                sigmas = svd(full(o.A));
+                fullA = full(o.A);
+                sigmas = sort(svd(fullA));
 
                 % Compute step. This is performed in a subclass.
                 Solve_Newton(o);
 
                 % Record condition number and eigenvalues of Newton system.
                 fullM = full(o.M);
-                eigsM = eig(fullM);
+                eigsM = sort(eig(fullM));
                 o.eigmin_neg = [o.eigmin_neg, min(eigsM)];
                 o.eigmax_neg = [o.eigmax_neg, max(eigsM(eigsM < 0))];
                 o.eigmin_pos = [o.eigmin_pos, min(eigsM(eigsM > 0))];
@@ -766,8 +770,15 @@ classdef pdcoO < handle
 
                 eigHmin = min(eigsH);
                 eigHmax = max(eigsH);
-                sigmin = min(sigmas);
-                sigmax = max(sigmas);
+                if size(o.A, 1) < size(o.A, 2)
+                        sigmin = 0;  % Matlab doesn't set sigmin to zero in this case
+                else
+                        sigmin = min(sigmas);
+                end
+                % compute the smallest nonzero singular value more or less reliably
+                % nonzero_sigmas = find(sigmas(1:end-1) ./ sigmas(2:end) > eps);
+                % sigmin = sigmas(nonzero_sigmas(1));
+                sigmax = sigmas(end);
 
                 % x1x2 = x1 for i in o.low and = x2 for i in o.upp
                 xmin = min(min(o.x1(o.low)), min(o.x2(o.upp)));
@@ -784,18 +795,29 @@ classdef pdcoO < handle
                 zmin = min(min(x1z2(o.low)), min(x2z1(o.low)));
                 zmax = max(max(x1z2(o.upp)), max(x2z1(o.upp)));
 
-                epsmin = (eigHmin * xmin + zmin);  % d1^2 is already in o.H.
-                epsmax = (eigHmax * xmax + zmax);
+                etamin = eigHmin * xmin + zmin;  % d1^2 is already in o.H.
+                etamax = eigHmax * xmax + zmax;
+                alphamin1 = min(min(o.x1(o.low) * o.d1^2 + o.z1(o.low)), min(o.x2(o.upp) * o.d1^2 + o.z2(o.upp)));
+                alphamin2 = xmin * eigHmin;
+                alphamin = max(alphamin1, alphamin2);
 
-                neg_lbnd = 0.5 * (o.d2^2 - epsmax - sqrt((o.d2^2 + epsmax)^2 + 4 * sigmax^2 * xmax));
-                neg_ubnd = -epsmin;
-                pos_lbnd = 0.5 * (o.d2^2 - epsmax + sqrt((o.d2^2 + epsmax)^2 + 4 * sigmin^2 * xmin));
-                pos_ubnd = 0.5 * (o.d2^2 - epsmin + sqrt((o.d2^2 + epsmin)^2 + 4 * sigmax^2 * xmax));
+                % use conjugate formula to avoid cancellation
+                % neg_lbnd = 0.5 * (o.d2^2 - etamax - sqrt((o.d2^2 + etamax)^2 + 4 * sigmax^2 * xmax));
+                % neg_ubnd = -etamin;  %0.5 * (o.d2^2 - etamin - sqrt((o.d2^2 + etamin)^2 + 4 * sigmin^2 * xmin));
+                neg_lbnd = -2 * (sigmax^2 * xmax + o.d2^2 * etamax) / (o.d2^2 - etamax + sqrt((o.d2^2 + etamax)^2 + 4 * sigmax^2 * xmax));
+                neg_ubnd = -alphamin;
+                if rank(full(o.A)) < size(o.A, 1)  % A does not have full row rank
+                    pos_lbnd = o.d2^2;
+                else
+                    pos_lbnd = 0.5 * (o.d2^2 - etamax + sqrt((o.d2^2 + etamax)^2 + 4 * sigmin^2 * xmin));
+                end
+                pos_ubnd = 0.5 * (o.d2^2 - etamin + sqrt((o.d2^2 + etamin)^2 + 4 * sigmax^2 * xmax));
 
                 o.neg_lbnds = [o.neg_lbnds, neg_lbnd];
                 o.neg_ubnds = [o.neg_ubnds, neg_ubnd];
                 o.pos_lbnds = [o.pos_lbnds, pos_lbnd];
                 o.pos_ubnds = [o.pos_ubnds, pos_ubnd];
+                o.conds_pred = [o.conds_pred, max(pos_ubnd, -neg_lbnd) / min(pos_lbnd, -neg_ubnd)];
 
                 if o.inform == 4
                     break
