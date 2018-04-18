@@ -1,13 +1,16 @@
-import model.lpmodel;
+import model.qpmodel;
 import model.slackmodel;
 
 options_pdco.file_id = 1;
 
-formulation = 'K1x';
-solver = 'Cholesky';
+formulation = 'K25';
+solver = 'LDL';
 classname = build_variant(pdcoo_home, formulation, solver);
 
-list_problem = {'afiro.mps'};
+% list_problem = {'afiro.mps'};
+% list_problem = {'CVXQP1_S.QPS'};
+% list_problem = {'CVXQP2_S.QPS'};
+list_problem = {'CVXQP3_S.QPS'};
 
 n_problem = length(list_problem);
 
@@ -29,7 +32,7 @@ for i = 1:n_problem
 
   % Read .mps file
   mps_stru = readmps(mps_name);
-  lp = mpstolp(mps_stru);
+  lp = qpstoqp(mps_stru);
   slack = slackmodel(lp);
   Anorm = normest(slack.gcon(slack.x0), 1.0e-3);
 
@@ -45,13 +48,38 @@ for i = 1:n_problem
   options_pdco.Maxiter = min(max(30, slack.n), 100);
   options_form = struct();
 
-  Problem = eval([classname, '(slack, options_pdco,options_form,options_solv)']);
+  Problem = eval([classname, '(slack, options_pdco, options_form, options_solv)']);
   Problem.solve;
   fprintf(Problem.file_id, ...
           '\n%12s   %11.4e   %6.0f   %6.0f   %6.0f   %6d   %6d   %7.2f s   %11.4e\n', ...
           mps_name, slack.fobj(Problem.x),                                            ...
           log10(Problem.Pinf), log10(Problem.Dinf), log10(Problem.Cinf0),             ...
           Problem.PDitns, Problem.inner_total, Problem.time, options_pdco.d2^2 * norm(Problem.y));
+
+   figure;
+   semilogy(Problem.conds, 'b-', 'LineWidth', 2); hold on
+   semilogy(Problem.conds_pred, 'r-', 'LineWidth', 2);
+   legend('condition number', 'estimate');
+   title('K2.5: Condition number');
+   xlabel('Iterations');
+   figure;
+   eigmin_neg = semilogy(-Problem.eigmin_neg, 'b.', 'MarkerSize', 15); hold on;
+   eigmax_neg = semilogy(-Problem.eigmax_neg, 'r.', 'MarkerSize', 15);
+   neg_lbnds = semilogy(-Problem.neg_lbnds, 'b-');
+   neg_ubnds = semilogy(-Problem.neg_ubnds, 'r-');
+   legend([eigmin_neg, eigmax_neg, neg_lbnds, neg_ubnds], ...
+          'smallest negative', 'largest negative', 'lower bound', 'upper bound');
+   title('K2.5: Negative eigenvalues');
+   xlabel('Iterations');
+   figure;
+   eigmin_pos = semilogy(Problem.eigmin_pos, 'b.', 'MarkerSize', 15); hold on;
+   eigmax_pos = semilogy(Problem.eigmax_pos, 'r.', 'MarkerSize', 15);
+   pos_lbnds = semilogy(Problem.pos_lbnds, 'b-');
+   pos_ubnds = semilogy(Problem.pos_ubnds, 'r-');
+   legend([eigmin_pos, eigmax_pos, pos_lbnds, pos_ubnds], ...
+          'smallest positive', 'largest positive', 'lower bound', 'upper bound');
+   title('K2.5: Positive eigenvalues');
+   xlabel('Iterations');
 end
 
 fclose('all');
