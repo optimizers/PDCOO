@@ -1,4 +1,4 @@
-classdef pdcoO < handle 
+classdef pdcoO < handle
     %-----------------------------------------------------------------------
     % pdcoO.m: Primal-Dual Barrier Method for Convex Objectives
     %-----------------------------------------------------------------------
@@ -44,11 +44,11 @@ classdef pdcoO < handle
     % Also, r and y satisfy r = D2 y, so that Ax + D2^2 y = b.
     % Thus if d2(i) = 1.0e-4, the i-th row of Ax = b will be satisfied to
     % approximately 1.0e-8.  This determines how large d2(i) can safely be.
-    
+
     properties
-        
+
         slack       % slackmodel or slackmodel_spot object
-        
+
         % Input extracted from "slack"
         A           % Matrix or opSpot
         b           % vector of RHS
@@ -56,7 +56,7 @@ classdef pdcoO < handle
         bu          % vector of upper bounds
         n           % number of variables
         m           % number of constraints
-        
+
         % Input provided by the user via "options"
         d1          % positive scalar or positive vector (see above)
         d2          % positive scalar or positive vector (see above)
@@ -76,7 +76,7 @@ classdef pdcoO < handle
         mu0         % initial barrier parameter
         backtrack   % specifies whether to do a backtracking linesearch
         file_id
-        
+
         % Output
         x           % primal solution
         y           % dual solution associated with Ax + D2 r = b
@@ -92,10 +92,10 @@ classdef pdcoO < handle
         inner_total % total number of inner iterations required
         time        % the cpu time used (via cputime)
                     % (we also use tic/toc to allow for multicore systems.)
-        
+
         explicitA
         zn
-        
+
         % Constraints type
         low
         upp
@@ -105,7 +105,7 @@ classdef pdcoO < handle
         zlo
         zup
         nfix
-        
+
         % Used to establish convergence
         eta
         maxf
@@ -125,13 +125,13 @@ classdef pdcoO < handle
         Cinf
         Cinf0
         fmerit
-        
+
         % Used to compute mu
         mufirst
         mulast
         mu
         center
-        
+
         % Variables
         x1
         x2
@@ -145,46 +145,46 @@ classdef pdcoO < handle
         dz2
         dx
         dy
-        
+
         obj
         grad
         hess
         H
-        
+
         step
         nf
-        
+
         % Some variables to print
         nfail
         regterm
         objreg
         objtrue
-        
+
         % They have to be defined in subclasses
         manage_op % Method deals with opFunction ?
         diagHess  % is hess a nx1 vector ?
         solver    % Solver's name
         head3     % Solver's name to print
         need_precon
-        
+
     end
-    
+
     methods (Abstract) % Should be defined in subclasses
-       
+
         Print_param(o)      % Print parameters which are specific to the subclass
         Init_param(o)       % Initialize some parameters for the subclass
         Solve_Newton(o)           % Solve Newton system
         Print_results(o)    % Print some results specific to the subclass
         Reset_param(o)      % Reset some parameters specific to the subclass at the end of the loop
-  
+
     end
-    
+
     methods
-        
+
         % Builder
         function o = pdcoO(slack, options)
             % PDCO contructor :
-            % Inputs : 
+            % Inputs :
             %   slack         : a slackmodel or slackmodel_spot object
             %
             %   options is a structure that may contains following
@@ -209,7 +209,7 @@ classdef pdcoO < handle
             %                   ifndef FeaTol = 1.0e-6
             %       OptTol    : scalar of accuracy in inequality constraints
             %                   ifndef OptTol = 1.0e-6
-            %       Print     : 1 for give output, else 0 
+            %       Print     : 1 for give output, else 0
             %                   ifndef Print = 1
             %       StepTol   : scalar which control how x and z reach the
             %                   bounds
@@ -224,9 +224,9 @@ classdef pdcoO < handle
             %                   ifndef mu0 = 1.0e-1
             %       backtrack : specifies whether to do a backtracking linesearch
             %                   ifndef backtrack = 0
-            
+
             o.slack = slack;
-            
+
             o.A = slack.gcon(slack.x0);
             o.b = slack.cL;
             o.bl = slack.bL;
@@ -238,111 +238,111 @@ classdef pdcoO < handle
             else
                 o.d1 = 1.0e-4;
             end
-            
+
             if isfield(options, 'd2')
                 o.d2 = options.d2;
             else
                 o.d2 = 1.0e-4;
             end
-            
+
             if isfield(options, 'x0')
                 o.x0 = options.x0;
             else
                 o.x0 = slack.x0;
             end
-            
+
             if isfield(options, 'y0')
                 o.y0 = options.y0;
             else
                 o.y0 = ones(o.m, 1);
             end
-            
+
             if isfield(options, 'z0')
                 o.z0 = options.z0;
             else
                 o.z0 = ones(o.n, 1);
             end
-            
+
             if isfield(options, 'xsize')
                 o.xsize = options.xsize;
             else
                 o.xsize = 100;
             end
-            
+
             if isfield(options, 'zsize')
                 o.zsize = options.zsize;
             else
                 o.zsize = 100;
             end
-            
+
             if isfield(options, 'Maxiter')
                 o.maxitn = options.Maxiter;
             else
                 o.maxitn = 30;
             end
-            
+
             if isfield(options, 'FeaTol')
                 o.featol = options.FeaTol;
             else
                 o.featol = 1.0e-6;
             end
-            
+
             if isfield(options, 'OptTol')
                 o.opttol = options.OptTol;
             else
                 o.opttol = 1.0e-6;
             end
-            
+
             if isfield(options, 'Print')
                 o.Prilev = options.Print;
             else
                 o.Prilev = 1;
             end
-            
+
             if isfield(options, 'StepTol')
                 o.steptol = options.StepTol;
             else
                 o.steptol = 0.99;
             end
-            
+
             if isfield(options, 'StepSame')
                 o.stepSame = options.StepSame;
             else
                 o.stepSame = 1;
             end
-            
+
             if isfield(options, 'x0min')
                 o.x0min = options.x0min;
             else
                 o.x0min = 1;
             end
-            
+
             if isfield(options, 'z0min')
                 o.z0min = options.z0min;
             else
                 o.z0min = 1;
             end
-            
+
             if isfield(options, 'mu0')
                 o.mu0 = options.mu0;
             else
                 o.mu0 = 1.0e-1;
             end
-            
+
             if isfield(options, 'backtrack')
                 o.backtrack = options.backtrack;
             else
                 o.backtrack = 0;
             end
-            
+
             if isfield(options, 'file_id')
                 o.file_id = options.file_id;
             else
                 o.file_id = 1;
             end
-            
+
         end
-          
+
         % TODO: slackmodel already does this!
         function categorize_bounds(o)
             % Categorize various types of bounds.
@@ -379,7 +379,7 @@ classdef pdcoO < handle
                 fprintf(o.file_id, '\n %8g %9g', length(o.zlo), length(o.zup));
             end
         end
-        
+
         function distrib(o, x, z)
             % distrib(x) or distrib(x, z) prints the
             % distribution of 1 or 2 vectors.
@@ -406,7 +406,7 @@ classdef pdcoO < handle
                 end
             end
         end
-            
+
         function merit(o)
             % Evaluate the merit function for Newton's method.
             % It is the 2-norm of the three sets of residuals.
@@ -419,7 +419,7 @@ classdef pdcoO < handle
                  norm(o.cU(o.upp))];
             o.fmerit = norm(f);
         end
-        
+
         function feasibility_resids(o)
             % Form residuals for the primal and dual equations.
             % rL, rU are output, but we input them as full vectors
@@ -427,7 +427,7 @@ classdef pdcoO < handle
             % 13 Aug 2003: z2-z1 coded more carefully
             %              (although MATLAB was doing the right thing).
             % 19 Nov 2003: r2(fix) = 0 has to be done after r2 = grad - r2;
-            
+
             x_res1 = o.x;
             x_res1(o.fix) = 0;
             o.r1 = o.A * x_res1;
@@ -446,7 +446,7 @@ classdef pdcoO < handle
             o.Pinf = max(o.Pinf, 1.0e-99);
             o.Dinf = max(o.Dinf, 1.0e-99);
         end
-        
+
         function complementarity_resids(o)
             % Form residuals for the complementarity equations.
             % cL, cU are output, but we input them as full vectors
@@ -475,7 +475,7 @@ classdef pdcoO < handle
                 o.center = 1;
             end
         end
-        
+
         function stepf = step_to_boundary(~, x, dx)
             % Assumes x > 0.
             % Finds the maximum step such that x + step*dx >= 0.
@@ -487,10 +487,10 @@ classdef pdcoO < handle
                 stepf = min(steps);
             end
         end
-        
+
         % Main function to solve the optimization problem
         function solve(o)
-            
+
             if o.Prilev > 0
                fprintf(o.file_id, '\n   --------------------------------------------------------');
                fprintf(o.file_id, '\n   pdco.m                            Version of 23 Nov 2013');
@@ -502,7 +502,7 @@ classdef pdcoO < handle
                fprintf(o.file_id, '\n                     Santiago Akle (ICME), Matt Zahr (ICME)');
                fprintf(o.file_id, '\n   --------------------------------------------------------\n');
             end
-            
+
             %---------------------------------------------------------------------
             % Decode A.
             %---------------------------------------------------------------------
@@ -546,7 +546,7 @@ classdef pdcoO < handle
             o.bigcenter = 1.0e+3;   % mu is reduced if center < bigcenter
             o.gamma = max(o.d1);
             o.delta = max(o.d2);
-            
+
             if o.Prilev > 0
                 fprintf(o.file_id, '\n\nx0min = %8g     featol = %8.1.0e', o.x0min, o.featol);
                 fprintf(o.file_id,                  '      d1max = %8.1.0e', o.gamma);
@@ -554,7 +554,7 @@ classdef pdcoO < handle
                 fprintf(o.file_id,                  '      d2max = %8.1.0e', o.delta);
                 fprintf(o.file_id,  '\nmu0 = %8.1.0e     steptol = %8g', o.mu0  , o.steptol);
                 fprintf(o.file_id,                  '     bigcenter = %8g'  , o.bigcenter);
-            
+
                 Print_param(o);
             end
 
@@ -563,7 +563,7 @@ classdef pdcoO < handle
             if o.Prilev > 0
                 tic
             end
-            
+
             % Categorize bounds and allow for fixed variables by modifying b.
             categorize_bounds(o);
 
@@ -630,7 +630,7 @@ classdef pdcoO < handle
             o.z2(o.upp) = max(-o.z0(o.upp), o.z0min);
             o.x(o.zlo) = o.x1(o.zlo);
             o.x(o.zup) = -o.x2(o.zup);
-            
+
             [o.obj, o.grad, o.hess] = o.slack.obj(o.x*o.beta);
             [mH, nH] = size(o.hess);
             if o.diagHess
@@ -643,7 +643,7 @@ classdef pdcoO < handle
                     error('Hessian size mismatch');
                 end
             end
-  
+
             o.obj = o.obj / o.theta; % Scaled obj.
             o.grad = o.grad*(o.beta / o.theta) + (o.d1.^2) .* o.x; % grad includes x regularization.
             o.H = o.hess * (o.beta * o.beta / o.theta);
@@ -681,7 +681,7 @@ classdef pdcoO < handle
                 o.mu0 = o.mu0*0.1;
                 clear clow cupp
             end
-            
+
             % mufirst = mu0 * (x0min * z0min);
             o.mufirst = o.mu0;
             o.mulast = 0.1 * o.opttol;
@@ -719,9 +719,9 @@ classdef pdcoO < handle
 
                 % Compute step. This is performed in a subclass.
                 Solve_Newton(o);
-                
-                if o.inform == 4 
-                    break 
+
+                if o.inform == 4
+                    break
                 end
 
                 % Find the maximum step size.
