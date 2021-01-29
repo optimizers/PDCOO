@@ -1,4 +1,4 @@
-classdef lpmodel_spot < model.nlpmodel
+classdef lpmodel_spot < model.nlpmodel_spot
     % nlpmodel where 
     %   objective is linear: f(x) = c' * x
     %   constraints are linear: c(x) = A  * x
@@ -12,7 +12,7 @@ classdef lpmodel_spot < model.nlpmodel
         
         function o = lpmodel_spot(name, x0, cL, cU, bL, bU, A, c)
             
-            o = o@model.nlpmodel(name, x0, cL, cU, bL, bU);
+            o = o@model.nlpmodel_spot(name, x0, cL, cU, bL, bU);
             
             % Store other things.
             o.A = A;
@@ -40,6 +40,11 @@ classdef lpmodel_spot < model.nlpmodel
         
         function J = gcon_local(self, ~)
             J = self.A;
+        end
+        
+        function [Jprod, Jtprod] = gconprod_local(self, x)
+            Jprod = @(x) self.A*x;
+            Jtprod = @(x) self.A'*x;          
         end
         
         function Hc = hcon_local(self, ~, ~)

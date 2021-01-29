@@ -1,4 +1,4 @@
-classdef slackmodel_spot < model.nlpmodel
+classdef slackmodel_spot < model.nlpmodel_spot
     % sous entend que le nlpmodel d entrée à un gradient des contraintes
     % de type opSpot
 
@@ -32,7 +32,7 @@ classdef slackmodel_spot < model.nlpmodel
          x0 = [ nlp.x0; c(constraints_I) ];
 
          % Instantiate from the base class.
-         self = self@model.nlpmodel(nlp.name, x0, cL, cU, bL, bU);
+         self = self@model.nlpmodel_spot(nlp.name, x0, cL, cU, bL, bU);
 
          % Identify the linear constraints.
          self.linear = nlp.linear;
@@ -91,6 +91,19 @@ classdef slackmodel_spot < model.nlpmodel
          J = @(x, mode) op_jacobian(self, x, mode, Jx);
          J = opFunction(self.m, self.n, J);
       end
+      
+      function [Jprod, Jtprod] = gconprod_local(self, xs)
+         % J = self.gcon(x);
+         nI = length(find(self.nlp.cL ~= self.nlp.cU));
+         [Jxprod, Jxtprod] = self.nlp.gconprod_local(xs(~self.islack,:));
+         Js = sparse(self.m, nI);
+         Js(~self.nlp.iFix,:) = -speye(nI);
+         n = sum(~self.islack);
+         
+         Jprod = @(v) Jxprod(v(1:n)) + Js*v(n+1:end);
+         Jtprod = @(v) [Jxtprod(v); Js'*v];
+      end
+
 
       function HL = hlag_local(self, xs, y)
          x = xs(~self.islack, :);
